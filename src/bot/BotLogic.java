@@ -17,7 +17,7 @@ public class BotLogic {
 	public List<Point> GetSurroundingPoints(Point centerLocation, int radius) {
 		List<Point> result = new ArrayList<Point>();
 
-		for (int i = 0; i <= radius; i++) {
+		for (int i = 1; i <= radius; i++) {
 			Point p1 = new Point(centerLocation.x, centerLocation.y + i);
 			if (IsLocationValid(p1))
 				result.add(p1);
