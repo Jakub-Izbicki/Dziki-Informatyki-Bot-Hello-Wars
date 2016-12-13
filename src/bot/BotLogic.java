@@ -1,8 +1,5 @@
 package bot;
 
-import java.awt.*;
-import a.j.m.P;
-
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,8 +52,6 @@ public class BotLogic {
 
 		for (Bomb bomb : bombsList) {
 
-
-
 			List<Point> dangerZone;
 			dangerZone = GetDangerZone(ParsePoint(bomb.Location),
 					bomb.ExplosionRadius);
@@ -66,17 +61,21 @@ public class BotLogic {
 						&& dangerZonePoint.y == location.y) {
 					//jesteśmy w polu rażenia tej bomby, ale
 					//jezeli bomba nie wybuchnie w nastepnej rundzie, to nie ma po co uciekać
+
+                    if((bomb.RoundsUntilExplodes <= 2) && (location.x == bomb.LocationToPoint().x) && (location.y == bomb.LocationToPoint().y))
+                        return true;
+
 					if (bomb.RoundsUntilExplodes > 1){
 
 						//ale trzeba jeszcze sprawdzić reakcję łańcuchową
 						//czyli, czy bomba jest w zasięgu innej bomby, która wybuchnie w następnej rundzie
 
+                        //TO recurence:
 						List<Bomb> newBombsList = bombsList.stream()
 								.filter(a -> !Objects.equals(a.Location, bomb.Location))
 								.collect(Collectors.toList());
 
 						if(newBombsList.size() == 0){
-
 							return false;
 						}
 
@@ -104,6 +103,7 @@ public class BotLogic {
 			{
 				Point nextNextMissilesPosition = AddDirectionMove(nextMissilesPosition,missile.MoveDirection);
 
+                //TODO : POINT EQUAL
                 //jeśli rakieta w następnej nastepnej turze będzie na pozycji, na którą chcemy wejść
                 if( nextNextMissilesPosition == location) return true;
 
@@ -123,6 +123,7 @@ public class BotLogic {
 			}
 			else
             {
+                //TODO : POINT EQUAL
                 //jeśli rakieta w nastepnej turze będzie na pozycji, na którą chcemy wejść
                 if( nextMissilesPosition == location) return true;
 
@@ -183,7 +184,7 @@ public class BotLogic {
 		return result;
 	}
 
-	public List<Point> calculateOnBombMove(List<Point> oldMovementPoints){
+	public List<Point> calculateMove(List<Point> oldMovementPoints){
 
 //		List<Point> newMovementPoints = new ArrayList<Point>();
 
@@ -193,7 +194,8 @@ public class BotLogic {
 
 				if (oldPoint.getLocation() == bomb.LocationToPoint()){
 
-					if (bomb.RoundsUntilExplodes < 3){
+				    //TODO : CHyba usunąć ?
+					if (bomb.RoundsUntilExplodes < 4 ){
 
 						oldMovementPoints = oldMovementPoints.stream()
 								.filter(a -> !Objects.equals(a.getLocation(), bomb.LocationToPoint()))
@@ -234,13 +236,13 @@ public class BotLogic {
 			}
 		}
 
-		movementPoints = calculateOnBombMove(movementPoints);
+		movementPoints = calculateMove(movementPoints);
 
 		for (MoveDirection direction : MoveDirection.values()) {
 
 			Point point = AddDirectionMove(_field.GetBotLocation(), direction);
 
-			if (movementPoints.contains(point)) {
+			if (movementPoints.contains(point)&&_field.Board[point.x][point.y] == 0) {
 				safeZones.add(direction);
 			}
 		}
