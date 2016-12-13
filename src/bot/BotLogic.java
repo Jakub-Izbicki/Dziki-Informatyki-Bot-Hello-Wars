@@ -97,19 +97,17 @@ public class BotLogic {
 		for (Missile missile : _field.Missiles) {
 			List<Point> dangerZone;
 
-
-			//jeśli bomba w nastepnej turze będzie na pozycji, na którą chcemy wejść
 			Point nextMissilesPosition = AddDirectionMove(ParsePoint(missile.Location),missile.MoveDirection);
-
-			if( nextMissilesPosition == location) return true;
-
 
 			//W zależności od trybu gry tzn. IsFastMissileModeEnabled == true
 			if(_field.MissileAvailableIn == 1)
 			{
 				Point nextNextMissilesPosition = AddDirectionMove(nextMissilesPosition,missile.MoveDirection);
 
-                //Jeśli bomba w następnej rundzie poleci, ale dalej będzie kolizja to wybucha od razu
+                //jeśli rakieta w następnej nastepnej turze będzie na pozycji, na którą chcemy wejść
+                if( nextNextMissilesPosition == location) return true;
+
+                //Jeśli rakieta w następnej rundzie poleci, ale dalej będzie kolizja to wybucha od razu
 				if(_field.Board[nextNextMissilesPosition.x][nextNextMissilesPosition.y] != 0)
 				{
 					dangerZone = GetDangerZone(ParsePoint(missile.Location),
@@ -125,7 +123,10 @@ public class BotLogic {
 			}
 			else
             {
-                //Jeśli bomba w następnej rundzie nie poleci dalej (bd miała kolizję) i wybuchnie
+                //jeśli rakieta w nastepnej turze będzie na pozycji, na którą chcemy wejść
+                if( nextMissilesPosition == location) return true;
+
+                //Jeśli rakieta w następnej rundzie nie poleci dalej (bd miała kolizję) i wybuchnie
                 if(_field.Board[nextMissilesPosition.x][nextMissilesPosition.y] != 0)
                 {
                     dangerZone = GetDangerZone(ParsePoint(missile.Location),
