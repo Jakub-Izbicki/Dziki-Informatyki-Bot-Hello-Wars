@@ -93,6 +93,10 @@ public class BotLogic {
 
 		for (Missile missile : _field.Missiles) {
 			List<Point> dangerZone;
+
+			//jeśli bomba w nastepnej turze będzie na pozycji, na którą chcemy wejść
+			if(AddDirectionMove(ParsePoint(missile.Location),missile.MoveDirection) == location) return true;
+
 			dangerZone = GetDangerZone(ParsePoint(missile.Location),
 					missile.ExplosionRadius);
 			for (Point dangerZonePoint : dangerZone) {
@@ -145,7 +149,9 @@ public class BotLogic {
 
 	public BotMove CalculateNextMove() {
 		BotMove result = new BotMove();
+
 		int randAction = rand.nextInt(9);
+
 		if (randAction == 0) {
 			result.Action = BotAction.DropBomb;
 		} else {
