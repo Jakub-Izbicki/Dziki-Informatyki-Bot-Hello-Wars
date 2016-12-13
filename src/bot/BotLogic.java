@@ -1,9 +1,11 @@
 package bot;
 
-import java.awt.Point;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public class BotLogic {
 
@@ -43,12 +45,12 @@ public class BotLogic {
 				&& location.y >= 0 && location.y < _field.Board[1].length;
 	}
 
-	public boolean IsInDangerZone(Point location) {
+	public boolean IsInDangerZone(Point location, List<Bomb> bombsList) {
 		if (!IsLocationValid(location)) {
 			return true;
 		}
 
-		for (Bomb bomb : _field.Bombs) {
+		for (Bomb bomb : bombsList) {
 
 
 
@@ -65,10 +67,20 @@ public class BotLogic {
 
 						//ale trzeba jeszcze sprawdzić reakcję łańcuchową
 						//czyli, czy bomba jest w zasięgu innej bomby, która wybuchnie w następnej rundzie
-//						if (IsInDangerZone(bomb.LocationToPoint())){
-//
-//							return true;
-//						}
+
+						List<Bomb> newBombsList = bombsList.stream()
+								.filter(a -> !Objects.equals(a.Location, bomb.Location))
+								.collect(Collectors.toList());
+
+						if(newBombsList.size() == 0){
+
+							return false;
+						}
+
+						if (IsInDangerZone(bomb.LocationToPoint(), newBombsList)){
+
+							return true;
+						}
 
 						//nie ma reakcji łańcuchowej
 						return false;
@@ -146,7 +158,7 @@ public class BotLogic {
 
 		for (MoveDirection direction : MoveDirection.values()) {
 			if (!IsInDangerZone(AddDirectionMove(_field.GetBotLocation(),
-					direction))) {
+					direction), _field.Bombs)) {
 				safeZones.add(direction);
 			}
 		}
