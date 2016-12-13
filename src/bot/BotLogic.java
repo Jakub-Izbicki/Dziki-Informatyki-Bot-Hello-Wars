@@ -147,13 +147,37 @@ public class BotLogic {
 		return result;
 	}
 
+	public List<Point> calculateOnBombMove(List<Point> oldMovementPoints){
+
+//		List<Point> newMovementPoints = new ArrayList<Point>();
+
+		for (Point oldPoint : oldMovementPoints){
+
+			for (Bomb bomb : _field.Bombs){
+
+				if (oldPoint.getLocation() == bomb.LocationToPoint()){
+
+					if (bomb.RoundsUntilExplodes < 3){
+
+						oldMovementPoints = oldMovementPoints.stream()
+								.filter(a -> !Objects.equals(a.getLocation(), bomb.LocationToPoint()))
+								.collect(Collectors.toList());
+					}
+				}
+			}
+		}
+
+		return oldMovementPoints;
+	}
+
 	public BotMove CalculateNextMove() {
 		BotMove result = new BotMove();
 
 		int randAction = rand.nextInt(9);
 
 		if (randAction == 0) {
-			result.Action = BotAction.DropBomb;
+			if(!IsInDangerZone(_field.GetBotLocation(), _field.Bombs))
+				result.Action = BotAction.DropBomb;
 		} else {
 			result.Action = BotAction.None;
 		}
@@ -162,9 +186,25 @@ public class BotLogic {
 
 		List<MoveDirection> safeZones = new ArrayList<MoveDirection>();
 
+		List<Point> movementPoints = new ArrayList<Point>();
+
 		for (MoveDirection direction : MoveDirection.values()) {
-			if (!IsInDangerZone(AddDirectionMove(_field.GetBotLocation(),
-					direction), _field.Bombs)) {
+
+			Point point = AddDirectionMove(_field.GetBotLocation(), direction);
+
+			if (!IsInDangerZone(point, _field.Bombs)) {
+				//safeZones.add(direction);
+				movementPoints.add(point);
+			}
+		}
+
+		movementPoints = calculateOnBombMove(movementPoints);
+
+		for (MoveDirection direction : MoveDirection.values()) {
+
+			Point point = AddDirectionMove(_field.GetBotLocation(), direction);
+
+			if (movementPoints.contains(point)) {
 				safeZones.add(direction);
 			}
 		}
