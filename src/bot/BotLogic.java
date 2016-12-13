@@ -49,6 +49,9 @@ public class BotLogic {
 		}
 
 		for (Bomb bomb : _field.Bombs) {
+
+
+
 			List<Point> dangerZone;
 			dangerZone = GetDangerZone(ParsePoint(bomb.Location),
 					bomb.ExplosionRadius);
@@ -56,6 +59,21 @@ public class BotLogic {
 
 				if (dangerZonePoint.x == location.x
 						&& dangerZonePoint.y == location.y) {
+					//jesteśmy w polu rażenia tej bomby, ale
+					//jezeli bomba nie wybuchnie w nastepnej rundzie, to nie ma po co uciekać
+					if (bomb.RoundsUntilExplodes > 1){
+
+						//ale trzeba jeszcze sprawdzić reakcję łańcuchową
+						//czyli, czy bomba jest w zasięgu innej bomby, która wybuchnie w następnej rundzie
+//						if (IsInDangerZone(bomb.LocationToPoint())){
+//
+//							return true;
+//						}
+
+						//nie ma reakcji łańcuchowej
+						return false;
+					}
+
 					return true;
 				}
 			}
@@ -137,6 +155,20 @@ public class BotLogic {
 			int randMoveAction = rand.nextInt((int) (safeZones.stream().count()));
 			result.Direction = safeZones.get(randMoveAction);
 		}
+
+//		result.Action = BotAction.FireMissile;
+//		result.FireDirection = MoveDirection.Down;
+
+//		for(int[] arr : _field.Board){
+//
+//			System.out.print("[");
+//
+//			for(int field : arr){
+//
+//				System.out.print(field);
+//			}
+//			System.out.println("]");
+//		}
 
 		return result;
 	}
