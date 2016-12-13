@@ -17,7 +17,7 @@ public class BotLogic {
 	public List<Point> GetSurroundingPoints(Point centerLocation, int radius) {
 		List<Point> result = new ArrayList<Point>();
 
-		for (int i = 1; i <= radius; i++) {
+		for (int i = 0; i <= radius; i++) {
 			Point p1 = new Point(centerLocation.x, centerLocation.y + i);
 			if (IsLocationValid(p1))
 				result.add(p1);
@@ -93,21 +93,21 @@ public class BotLogic {
 		Point result = new Point(location.x, location.y);
 
 		switch (direction) {
-		case Up:
-			result.y--;
-			break;
+			case Up:
+				result.y--;
+				break;
 
-		case Down:
-			result.y++;
-			break;
+			case Down:
+				result.y++;
+				break;
 
-		case Right:
-			result.x++;
-			break;
+			case Right:
+				result.x++;
+				break;
 
-		case Left:
-			result.x--;
-			break;
+			case Left:
+				result.x--;
+				break;
 		}
 
 		return result;
@@ -138,7 +138,6 @@ public class BotLogic {
 			result.Direction = safeZones.get(randMoveAction);
 		}
 
-		result.Action = BotAction.DropBomb;
 		return result;
 	}
 
