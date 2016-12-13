@@ -1,6 +1,9 @@
 package bot;
 
 import java.awt.*;
+import a.j.m.P;
+
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -94,18 +97,51 @@ public class BotLogic {
 		for (Missile missile : _field.Missiles) {
 			List<Point> dangerZone;
 
-			//jeśli bomba w nastepnej turze będzie na pozycji, na którą chcemy wejść
-			if(AddDirectionMove(ParsePoint(missile.Location),missile.MoveDirection) == location) return true;
+			Point nextMissilesPosition = AddDirectionMove(ParsePoint(missile.Location),missile.MoveDirection);
 
-			dangerZone = GetDangerZone(ParsePoint(missile.Location),
-					missile.ExplosionRadius);
-			for (Point dangerZonePoint : dangerZone) {
+			//W zależności od trybu gry tzn. IsFastMissileModeEnabled == true
+			if(_field.MissileAvailableIn == 1)
+			{
+				Point nextNextMissilesPosition = AddDirectionMove(nextMissilesPosition,missile.MoveDirection);
 
-				if (dangerZonePoint.x == location.x
-						&& dangerZonePoint.y == location.y) {
-					return true;
+                //jeśli rakieta w następnej nastepnej turze będzie na pozycji, na którą chcemy wejść
+                if( nextNextMissilesPosition == location) return true;
+
+                //Jeśli rakieta w następnej rundzie poleci, ale dalej będzie kolizja to wybucha od razu
+				if(_field.Board[nextNextMissilesPosition.x][nextNextMissilesPosition.y] != 0)
+				{
+					dangerZone = GetDangerZone(ParsePoint(missile.Location),
+							missile.ExplosionRadius);
+					for (Point dangerZonePoint : dangerZone) {
+
+						if (dangerZonePoint.x == location.x
+								&& dangerZonePoint.y == location.y) {
+							return true;
+						}
+					}
 				}
 			}
+			else
+            {
+                //jeśli rakieta w nastepnej turze będzie na pozycji, na którą chcemy wejść
+                if( nextMissilesPosition == location) return true;
+
+                //Jeśli rakieta w następnej rundzie nie poleci dalej (bd miała kolizję) i wybuchnie
+                if(_field.Board[nextMissilesPosition.x][nextMissilesPosition.y] != 0)
+                {
+                    dangerZone = GetDangerZone(ParsePoint(missile.Location),
+                            missile.ExplosionRadius);
+                    for (Point dangerZonePoint : dangerZone) {
+
+                        if (dangerZonePoint.x == location.x
+                                && dangerZonePoint.y == location.y) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+
 		}
 
 		if (_field.Board[location.x][location.y] != 0) {
