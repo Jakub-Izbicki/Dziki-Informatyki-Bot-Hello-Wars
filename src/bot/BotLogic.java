@@ -238,6 +238,8 @@ public class BotLogic {
 			result.Action = BotAction.None;
 		}
 
+	public List<MoveDirection> calculateOneStep(BotArenaInfo _currentField){
+
 		List<MoveDirection> safeZones = new ArrayList<MoveDirection>();
 
 		List<Point> movementPoints = new ArrayList<Point>();
@@ -263,24 +265,56 @@ public class BotLogic {
 			}
 		}
 
+		return safeZones;
+	}
+
+	public BotArenaInfo getNextField(BotArenaInfo _oldField){
+
+		BotArenaInfo _newField = _oldField;
+
+		_newField.RoundNumber++;
+
+		//Bombs:
+		_newField.Bombs = _newField.Bombs.stream()
+				.filter(bomb -> !Objects.equals(bomb.RoundsUntilExplodes, 1))
+				.collect(Collectors.toList());
+
+		for (Bomb bomb : _newField.Bombs){
+
+			bomb.RoundsUntilExplodes--;
+		}
+
+		//increasing RoundsBeforeIncreasingBlastRadius:
+		if ((_newField.RoundNumber % _newField.GameConfig.RoundsBeforeIncreasingBlastRadius) == 0)
+			_newField.GameConfig.RoundsBeforeIncreasingBlastRadius++;
+
+		//Missiles:
+
+	}
+
+	public BotMove CalculateNextMove() {
+		BotMove result = new BotMove();
+
+		int randAction = rand.nextInt(9);
+
+		if (randAction == 0) {
+			if(!IsInDangerZone(_field.GetBotLocation(), _field.Bombs))
+				result.Action = BotAction.DropBomb;
+		} else {
+			result.Action = BotAction.None;
+		}
+
+		result.FireDirection = MoveDirection.Up;
+
+		List<MoveDirection> safeZones = new ArrayList<MoveDirection>();
+
+		safeZones = calculateOneStep(_field);
+
 		if (safeZones.stream().count() > 0) {
 			int randMoveAction = rand.nextInt((int) (safeZones.stream().count()));
 			result.Direction = safeZones.get(randMoveAction);
 		}
 
-//		result.Action = BotAction.FireMissile;
-//		result.FireDirection = MoveDirection.Down;
-
-//		for(int[] arr : _field.Board){
-//
-//			System.out.print("[");
-//
-//			for(int field : arr){
-//
-//				System.out.print(field);
-//			}
-//			System.out.println("]");
-//		}
 
 		return result;
 	}
