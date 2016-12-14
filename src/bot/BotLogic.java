@@ -208,6 +208,59 @@ public class BotLogic {
 		return oldMovementPoints;
 	}
 
+
+	public List<MoveDirection> calculateOneStep(BotArenaInfo _currentField){
+
+		List<MoveDirection> safeZones = new ArrayList<MoveDirection>();
+		List<Point> movementPoints = new ArrayList<Point>();
+
+		for (MoveDirection direction : MoveDirection.values()) {
+
+			Point point = AddDirectionMove(_field.GetBotLocation(), direction);
+
+			if (!IsInDangerZone(point, _field.Bombs)) {
+				movementPoints.add(point);
+			}
+		}
+
+		movementPoints = calculateMove(movementPoints);
+
+		for (MoveDirection direction : MoveDirection.values()) {
+
+			Point point = AddDirectionMove(_field.GetBotLocation(), direction);
+
+			if (movementPoints.contains(point)&&_field.Board[point.x][point.y] == 0) {
+				safeZones.add(direction);
+			}
+		}
+
+		return safeZones;
+	}
+
+	public BotArenaInfo getNextField(BotArenaInfo _oldField){
+
+		BotArenaInfo _newField = _oldField;
+
+		_newField.RoundNumber++;
+
+		//Bombs:
+		_newField.Bombs = _newField.Bombs.stream()
+				.filter(bomb -> !Objects.equals(bomb.RoundsUntilExplodes, 1))
+				.collect(Collectors.toList());
+
+		for (Bomb bomb : _newField.Bombs){
+
+			bomb.RoundsUntilExplodes--;
+		}
+
+		//increasing RoundsBeforeIncreasingBlastRadius:
+		if ((_newField.RoundNumber % _newField.GameConfig.RoundsBeforeIncreasingBlastRadius) == 0)
+			_newField.GameConfig.RoundsBeforeIncreasingBlastRadius++;
+
+		//Missiles:
+
+	}
+
 	public BotMove CalculateNextMove() {
 		BotMove result = new BotMove();
 
@@ -224,47 +277,13 @@ public class BotLogic {
 
 		List<MoveDirection> safeZones = new ArrayList<MoveDirection>();
 
-		List<Point> movementPoints = new ArrayList<Point>();
-
-		for (MoveDirection direction : MoveDirection.values()) {
-
-			Point point = AddDirectionMove(_field.GetBotLocation(), direction);
-
-			if (!IsInDangerZone(point, _field.Bombs)) {
-				//safeZones.add(direction);
-				movementPoints.add(point);
-			}
-		}
-
-		movementPoints = calculateMove(movementPoints);
-
-		for (MoveDirection direction : MoveDirection.values()) {
-
-			Point point = AddDirectionMove(_field.GetBotLocation(), direction);
-
-			if (movementPoints.contains(point)&&_field.Board[point.x][point.y] == 0) {
-				safeZones.add(direction);
-			}
-		}
+		safeZones = calculateOneStep(_field);
 
 		if (safeZones.stream().count() > 0) {
 			int randMoveAction = rand.nextInt((int) (safeZones.stream().count()));
 			result.Direction = safeZones.get(randMoveAction);
 		}
 
-//		result.Action = BotAction.FireMissile;
-//		result.FireDirection = MoveDirection.Down;
-
-//		for(int[] arr : _field.Board){
-//
-//			System.out.print("[");
-//
-//			for(int field : arr){
-//
-//				System.out.print(field);
-//			}
-//			System.out.println("]");
-//		}
 
 		return result;
 	}
