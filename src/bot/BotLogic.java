@@ -91,6 +91,7 @@ public class BotLogic {
 			}
 		}
 
+		/*
 		for (Missile missile : _field.Missiles) {
 			List<Point> dangerZone;
 
@@ -143,6 +144,7 @@ public class BotLogic {
 
 		}
 
+		*/
 		if (_field.Board[location.x][location.y] != 0) {
 			return true;
 		}
@@ -222,6 +224,7 @@ public class BotLogic {
 				return MoveDirection.Down;
 	}
 
+	/*
     public boolean canFire(BotMove result)
     {
         Point nextMissilesPosition = AddDirectionMove(_field.GetBotLocation(), result.FireDirection);
@@ -244,7 +247,7 @@ public class BotLogic {
         }
         return true;
     }
-
+*/
 
 
 
@@ -301,6 +304,7 @@ public class BotLogic {
 			_newField.GameConfig.RoundsBeforeIncreasingBlastRadius++;
 
 		//Missiles:
+		/*
 		for (Missile missile : _newField.Missiles){
 
 			if(_field.GameConfig.IsFastMissileModeEnabled != true){
@@ -331,6 +335,7 @@ public class BotLogic {
 				}
 			}
 		}
+		*/
 		return _newField;
 	}
 
@@ -366,24 +371,17 @@ public class BotLogic {
 	public BotMove CalculateNextMove() {
 		BotMove result = new BotMove();
 
-		int randAction = rand.nextInt(9);
+		System.out.println(_field.RoundNumber);
+
+		int randAction = rand.nextInt(19);
 
 		result.FireDirection = calculateFireDirection(_field.GetOpponentLocationList().get(0), _field.GetBotLocation());
 
-		if (_field.MissileAvailableIn == 1) {
-			if(canFire(result))
-			{
-				result.Action = BotAction.FireMissile;
-			}
-		}
-		else
-		{
-			if (randAction == 0) {
-				if (!IsInDangerZone(_field.GetBotLocation(), _field.Bombs))
-					result.Action = BotAction.DropBomb;
-			} else {
-				result.Action = BotAction.None;
-			}
+		if (randAction == 0) {
+			if (!IsInDangerZone(_field.GetBotLocation(), _field.Bombs))
+				result.Action = BotAction.DropBomb;
+		} else {
+			result.Action = BotAction.None;
 		}
 
 		List<MoveDirection> safeZones = new ArrayList<MoveDirection>();
