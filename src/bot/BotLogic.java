@@ -99,7 +99,7 @@ public class BotLogic {
 			Point nextMissilesPosition = AddDirectionMove(ParsePoint(missile.Location),missile.MoveDirection);
 
 			//W zależności od trybu gry tzn. IsFastMissileModeEnabled == true
-			if(_field.MissileAvailableIn == 1)
+			if(_field.GameConfig.IsFastMissileModeEnabled == true)
 			{
 				Point nextNextMissilesPosition = AddDirectionMove(nextMissilesPosition,missile.MoveDirection);
 
@@ -110,7 +110,7 @@ public class BotLogic {
                 //Jeśli rakieta w następnej rundzie poleci, ale dalej będzie kolizja to wybucha od razu
 				if(_field.Board[nextNextMissilesPosition.x][nextNextMissilesPosition.y] != 0)
 				{
-					dangerZone = GetDangerZone(ParsePoint(missile.Location),
+					dangerZone = GetDangerZone(nextMissilesPosition,
 							missile.ExplosionRadius);
 					for (Point dangerZonePoint : dangerZone) {
 
@@ -130,7 +130,7 @@ public class BotLogic {
                 //Jeśli rakieta w następnej rundzie nie poleci dalej (bd miała kolizję) i wybuchnie
                 if(_field.Board[nextMissilesPosition.x][nextMissilesPosition.y] != 0)
                 {
-                    dangerZone = GetDangerZone(ParsePoint(missile.Location),
+                    dangerZone = GetDangerZone(nextMissilesPosition,
                             missile.ExplosionRadius);
                     for (Point dangerZonePoint : dangerZone) {
 
@@ -208,10 +208,28 @@ public class BotLogic {
 		return oldMovementPoints;
 	}
 
+	MoveDirection calculateFireDirection(Point op, Point me)
+	{
+		if(Math.abs(op.x - me.x) > Math.abs(op.y-me.y))
+		{
+			if(me.x>op.x)
+				return MoveDirection.Left;
+			else
+				return MoveDirection.Right;
+		}
+		else
+			if(me.y>op.y)
+				return MoveDirection.Up;
+			else
+				return MoveDirection.Down;
+	}
+
 	public BotMove CalculateNextMove() {
 		BotMove result = new BotMove();
 
 		int randAction = rand.nextInt(9);
+
+		result.FireDirection = calculateFireDirection(_field.GetOpponentLocationList(),_field.GetBotLocation());
 
 		if (randAction == 0) {
 			if(!IsInDangerZone(_field.GetBotLocation(), _field.Bombs))
@@ -219,8 +237,6 @@ public class BotLogic {
 		} else {
 			result.Action = BotAction.None;
 		}
-
-		result.FireDirection = MoveDirection.Up;
 
 		List<MoveDirection> safeZones = new ArrayList<MoveDirection>();
 
