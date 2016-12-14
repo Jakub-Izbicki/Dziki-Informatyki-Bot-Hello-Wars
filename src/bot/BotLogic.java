@@ -224,49 +224,96 @@ public class BotLogic {
 				return MoveDirection.Down;
 	}
 
+
+
 	public BotMove CalculateNextMove() {
-		BotMove result = new BotMove();
+        BotMove result = new BotMove();
 
-		int randAction = rand.nextInt(9);
+        int randAction = rand.nextInt(9);
 
-		result.FireDirection = calculateFireDirection(_field.GetOpponentLocationList(),_field.GetBotLocation());
+        result.FireDirection = calculateFireDirection(_field.GetOpponentLocationList().get(0), _field.GetBotLocation());
 
-		if (randAction == 0) {
-			if(!IsInDangerZone(_field.GetBotLocation(), _field.Bombs))
-				result.Action = BotAction.DropBomb;
-		} else {
-			result.Action = BotAction.None;
-		}
+        if (_field.MissileAvailableIn == 1) {
+            Point nextMissilesPosition = AddDirectionMove(_field.GetBotLocation(), result.FireDirection);
 
-	public List<MoveDirection> calculateOneStep(BotArenaInfo _currentField){
+            //W zależności od trybu gry tzn. IsFastMissileModeEnabled == true
+            if (_field.GameConfig.IsFastMissileModeEnabled == true) {
+                Point nextNextMissilesPosition = AddDirectionMove(nextMissilesPosition, result.FireDirection);
 
-		List<MoveDirection> safeZones = new ArrayList<MoveDirection>();
+                if (_field.Board[nextNextMissilesPosition.x][nextNextMissilesPosition.y] != 0) {
+                    dangerZone = GetDangerZone(nextMissilesPosition,
+                            missile.ExplosionRadius);
+                    for (Point dangerZonePoint : dangerZone) {
 
-		List<Point> movementPoints = new ArrayList<Point>();
+                        if (dangerZonePoint.x == location.x
+                                && dangerZonePoint.y == location.y) {
+                            return true;
+                        }
+                    }
+                }
 
-		for (MoveDirection direction : MoveDirection.values()) {
+            }
+            else
+            {
+                //TODO : POINT EQUAL
+                //jeśli rakieta w nastepnej turze będzie na pozycji, na którą chcemy wejść
+                if (nextMissilesPosition == location) return true;
 
-			Point point = AddDirectionMove(_field.GetBotLocation(), direction);
+                //Jeśli rakieta w następnej rundzie nie poleci dalej (bd miała kolizję) i wybuchnie
+                if (_field.Board[nextMissilesPosition.x][nextMissilesPosition.y] != 0) {
+                    dangerZone = GetDangerZone(nextMissilesPosition,
+                            missile.ExplosionRadius);
+                    for (Point dangerZonePoint : dangerZone) {
 
-			if (!IsInDangerZone(point, _field.Bombs)) {
-				//safeZones.add(direction);
-				movementPoints.add(point);
-			}
-		}
+                        if (dangerZonePoint.x == location.x
+                                && dangerZonePoint.y == location.y) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
 
-		movementPoints = calculateMove(movementPoints);
 
-		for (MoveDirection direction : MoveDirection.values()) {
+        if (randAction == 0) {
+            if (!IsInDangerZone(_field.GetBotLocation(), _field.Bombs))
+                result.Action = BotAction.DropBomb;
+        } else {
+            result.Action = BotAction.None;
+        }
 
-			Point point = AddDirectionMove(_field.GetBotLocation(), direction);
+        return result;
+    }
 
-			if (movementPoints.contains(point)&&_field.Board[point.x][point.y] == 0) {
-				safeZones.add(direction);
-			}
-		}
+    public List<MoveDirection> calculateOneStep(BotArenaInfo _currentField){
 
-		return safeZones;
-	}
+        List<MoveDirection> safeZones = new ArrayList<MoveDirection>();
+
+        List<Point> movementPoints = new ArrayList<Point>();
+
+        for (MoveDirection direction : MoveDirection.values()) {
+
+            Point point = AddDirectionMove(_field.GetBotLocation(), direction);
+
+            if (!IsInDangerZone(point, _field.Bombs)) {
+                //safeZones.add(direction);
+                movementPoints.add(point);
+            }
+        }
+
+        movementPoints = calculateMove(movementPoints);
+
+        for (MoveDirection direction : MoveDirection.values()) {
+
+            Point point = AddDirectionMove(_field.GetBotLocation(), direction);
+
+            if (movementPoints.contains(point)&&_field.Board[point.x][point.y] == 0) {
+                safeZones.add(direction);
+            }
+        }
+
+        return safeZones;
+    }
 
 	public BotArenaInfo getNextField(BotArenaInfo _oldField){
 
