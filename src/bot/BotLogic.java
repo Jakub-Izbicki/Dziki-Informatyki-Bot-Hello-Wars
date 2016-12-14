@@ -1,16 +1,14 @@
 package bot;
 
 import java.awt.Point;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BotLogic {
 
 	BotArenaInfo _field;
 	Random rand = new Random();
+	public boolean isEnd;
 
 	BotLogic(BotArenaInfo field) {
 		_field = field;
@@ -226,64 +224,64 @@ public class BotLogic {
 
 
 
-	public BotMove CalculateNextMove() {
-        BotMove result = new BotMove();
-
-        int randAction = rand.nextInt(9);
-
-        result.FireDirection = calculateFireDirection(_field.GetOpponentLocationList().get(0), _field.GetBotLocation());
-
-        if (_field.MissileAvailableIn == 1) {
-            Point nextMissilesPosition = AddDirectionMove(_field.GetBotLocation(), result.FireDirection);
-
-            //W zależności od trybu gry tzn. IsFastMissileModeEnabled == true
-            if (_field.GameConfig.IsFastMissileModeEnabled == true) {
-                Point nextNextMissilesPosition = AddDirectionMove(nextMissilesPosition, result.FireDirection);
-
-                if (_field.Board[nextNextMissilesPosition.x][nextNextMissilesPosition.y] != 0) {
-                    dangerZone = GetDangerZone(nextMissilesPosition,
-                            missile.ExplosionRadius);
-                    for (Point dangerZonePoint : dangerZone) {
-
-                        if (dangerZonePoint.x == location.x
-                                && dangerZonePoint.y == location.y) {
-                            return true;
-                        }
-                    }
-                }
-
-            }
-            else
-            {
-                //TODO : POINT EQUAL
-                //jeśli rakieta w nastepnej turze będzie na pozycji, na którą chcemy wejść
-                if (nextMissilesPosition == location) return true;
-
-                //Jeśli rakieta w następnej rundzie nie poleci dalej (bd miała kolizję) i wybuchnie
-                if (_field.Board[nextMissilesPosition.x][nextMissilesPosition.y] != 0) {
-                    dangerZone = GetDangerZone(nextMissilesPosition,
-                            missile.ExplosionRadius);
-                    for (Point dangerZonePoint : dangerZone) {
-
-                        if (dangerZonePoint.x == location.x
-                                && dangerZonePoint.y == location.y) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-
-
-        if (randAction == 0) {
-            if (!IsInDangerZone(_field.GetBotLocation(), _field.Bombs))
-                result.Action = BotAction.DropBomb;
-        } else {
-            result.Action = BotAction.None;
-        }
-
-        return result;
-    }
+//	public BotMove CalculateNextMove() {
+//        BotMove result = new BotMove();
+//
+//        int randAction = rand.nextInt(9);
+//
+//        result.FireDirection = calculateFireDirection(_field.GetOpponentLocationList().get(0), _field.GetBotLocation());
+//
+//        if (_field.MissileAvailableIn == 1) {
+//            Point nextMissilesPosition = AddDirectionMove(_field.GetBotLocation(), result.FireDirection);
+//
+//            //W zależności od trybu gry tzn. IsFastMissileModeEnabled == true
+//            if (_field.GameConfig.IsFastMissileModeEnabled == true) {
+//                Point nextNextMissilesPosition = AddDirectionMove(nextMissilesPosition, result.FireDirection);
+//
+//                if (_field.Board[nextNextMissilesPosition.x][nextNextMissilesPosition.y] != 0) {
+//                    dangerZone = GetDangerZone(nextMissilesPosition,
+//                            missile.ExplosionRadius);
+//                    for (Point dangerZonePoint : dangerZone) {
+//
+//                        if (dangerZonePoint.x == location.x
+//                                && dangerZonePoint.y == location.y) {
+//                            return true;
+//                        }
+//                    }
+//                }
+//
+//            }
+//            else
+//            {
+//                //TODO : POINT EQUAL
+//                //jeśli rakieta w nastepnej turze będzie na pozycji, na którą chcemy wejść
+//                if (nextMissilesPosition == location) return true;
+//
+//                //Jeśli rakieta w następnej rundzie nie poleci dalej (bd miała kolizję) i wybuchnie
+//                if (_field.Board[nextMissilesPosition.x][nextMissilesPosition.y] != 0) {
+//                    dangerZone = GetDangerZone(nextMissilesPosition,
+//                            missile.ExplosionRadius);
+//                    for (Point dangerZonePoint : dangerZone) {
+//
+//                        if (dangerZonePoint.x == location.x
+//                                && dangerZonePoint.y == location.y) {
+//                            return true;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//
+//
+//        if (randAction == 0) {
+//            if (!IsInDangerZone(_field.GetBotLocation(), _field.Bombs))
+//                result.Action = BotAction.DropBomb;
+//        } else {
+//            result.Action = BotAction.None;
+//        }
+//
+//        return result;
+//    }
 
     public List<MoveDirection> calculateOneStep(BotArenaInfo _currentField){
 
@@ -315,9 +313,11 @@ public class BotLogic {
         return safeZones;
     }
 
-	public BotArenaInfo getNextField(BotArenaInfo _oldField){
+	public BotArenaInfo getNextField(BotArenaInfo _oldField, MoveDirection playerDirection){
 
 		BotArenaInfo _newField = _oldField;
+
+		_newField.SetBotLocation(AddDirectionMove(_oldField.GetBotLocation(), playerDirection));
 
 		_newField.RoundNumber++;
 
@@ -336,7 +336,66 @@ public class BotLogic {
 			_newField.GameConfig.RoundsBeforeIncreasingBlastRadius++;
 
 		//Missiles:
+		for (Missile missile : _newField.Missiles){
 
+			if(_field.GameConfig.IsFastMissileModeEnabled != true){
+
+				//TODO: dla slow mode
+				Point nextPoint = AddDirectionMove(missile.LocationToPoint(), missile.MoveDirection);
+
+				if((!IsLocationValid(nextPoint) &&
+						_newField.Board[nextPoint.x][nextPoint.y] != 0 &&
+						nextPoint == _newField.GetBotLocation())){
+
+					_newField.Missiles = _newField.Missiles.stream()
+							.filter(missile1 -> !Objects.equals(missile1.LocationToPoint(), missile.LocationToPoint()))
+							.collect(Collectors.toList());
+				}
+			}else{
+
+				//TODO: dla fast mode
+				Point nextPoint = AddDirectionMove(AddDirectionMove(missile.LocationToPoint(), missile.MoveDirection), missile.MoveDirection);
+
+				if((!IsLocationValid(nextPoint) &&
+						_newField.Board[nextPoint.x][nextPoint.y] != 0 &&
+						nextPoint == _newField.GetBotLocation())){
+
+					_newField.Missiles = _newField.Missiles.stream()
+							.filter(missile1 -> !Objects.equals(missile1.LocationToPoint(), missile.LocationToPoint()))
+							.collect(Collectors.toList());
+				}
+			}
+		}
+		return _newField;
+	}
+
+	public boolean nextStep(BotArenaInfo currentField, int depth, MoveDirection direction){
+
+		if(!isEnd){
+
+			List<MoveDirection> movesList = calculateOneStep(currentField);
+
+			for (MoveDirection directionTemp : movesList){
+
+				BotArenaInfo _newField = getNextField(currentField, direction);
+
+				depth++;
+
+				if(depth >= 5){
+
+					isEnd = true;
+					return true;
+				}else if (movesList.size()  == 0){
+
+					return false;
+				}
+
+				return nextStep(_newField, depth, directionTemp);
+			}
+			return false;
+
+		}else
+			return true;
 	}
 
 	public BotMove CalculateNextMove() {
@@ -357,10 +416,30 @@ public class BotLogic {
 
 		safeZones = calculateOneStep(_field);
 
-		if (safeZones.stream().count() > 0) {
-			int randMoveAction = rand.nextInt((int) (safeZones.stream().count()));
-			result.Direction = safeZones.get(randMoveAction);
+		Collections.shuffle(safeZones);
+
+		isEnd = false;
+
+		MoveDirection movement = null;
+
+		for (MoveDirection movementDirection : safeZones){
+
+			BotArenaInfo newField = getNextField(_field, movementDirection);
+
+			boolean isStepOK = nextStep(newField, 0, movementDirection);
+
+			if (isStepOK){
+				movement = movementDirection;
+				break;
+			}
 		}
+
+		result.Direction = movement;
+
+//		if (safeZones.stream().count() > 0) {
+//			int randMoveAction = rand.nextInt((int) (safeZones.stream().count()));
+//			result.Direction = safeZones.get(randMoveAction);
+//		}
 
 
 		return result;

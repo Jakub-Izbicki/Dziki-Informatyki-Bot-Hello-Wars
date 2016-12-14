@@ -1,11 +1,11 @@
 package bot;
 
-import java.awt.Point;
+import com.google.gson.annotations.SerializedName;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import com.google.gson.annotations.SerializedName;
 
 public class BotArenaInfo {
 	public int RoundNumber;
@@ -23,6 +23,12 @@ public class BotArenaInfo {
 		String[] coords = BotLocation.split(",");
 		return new Point(Integer.parseInt(coords[0].trim()),
 				Integer.parseInt(coords[1].trim()));
+	}
+
+	public void SetBotLocation(Point point){
+
+		String newPointStr = point.x + ", " + point.y;
+		BotLocation = newPointStr;
 	}
 
 	public List<Point> GetOpponentLocationList() {
